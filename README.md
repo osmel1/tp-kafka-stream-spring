@@ -1,8 +1,10 @@
 # Activité Pratique N°3: Event Driven Architecture with Apache Kafka 
 
 **Presente par**: Oussama Elhachimi
+
 **Encadre par**: Pr. Mohamed YOUSSFI    
-**Filière**: Big Data & Cloud Computing
+
+**Filière**: II - Big Data & Cloud Computing
 
 ---
 
@@ -53,7 +55,7 @@ Cette activité pratique vise à vous familiariser avec l'**Architecture Piloté
 ```bash
 start bin\windows\kafka-server-start.bat config/server.properties
 ```
-    ![2 1](https://github.com/user-attachments/assets/807c67c4-aa9e-438c-ac87-414f821d1123).
+   ![2 1](https://github.com/user-attachments/assets/807c67c4-aa9e-438c-ac87-414f821d1123).
 
 4. **Tester avec Kafka Console Producer et Consumer** :
 4.1 **Créer un topic** :
@@ -135,3 +137,99 @@ Executer la commande suivant pour connecté au conteneur, où vous pourrez exéc
    ![producer](https://github.com/user-attachments/assets/4649cff1-e9f1-4a6d-b5ff-bcf0d8c478da)
 4.1 **Lancer un Consumer**
    ![consumer](https://github.com/user-attachments/assets/70d15ea6-56d0-46e6-95eb-2eefee481124)
+
+
+
+
+## Partie 3 : Développement d'une application avec Spring Cloud Streams
+1. **Créer un projet Spring Boot**
+On cree un projet sping en utilisant IntelliJ IDE avec les dependances suivants :
+ ![1](https://github.com/user-attachments/assets/373b8ef9-b97e-4ecb-b7a5-40b70fced3bb)
+
+2. **Implémenter un Producteur Kafka via un Controller REST :**
+2.1 **Le Model PageEvent :**
+   PageEvent : l'objet que vous produis et vous envoyer au topic .  
+
+```java
+   @Data @NoArgsConstructor @AllArgsConstructor @ToString @Builder
+public class PageEvent {
+    private String name;
+    private String user;
+    private Date date;
+    private long duration;
+}
+```
+
+2.1 **PageEventRestController**
+
+Le service PageEventRestController est un contrôleur REST qui permet d'envoyer des messages à Kafka. Il utilise StreamBridge pour publier des messages vers un topic Kafka spécifié. La méthode associée répond aux requêtes de l'utilisateur en recevant en paramètre le nom du topic et un nom d'événement. Elle crée ensuite une instance de PageEvent et l'envoie vers le topic indiqué.
+
+```java
+@RestController
+public class PageEventRestController {
+    @Autowired
+    private StreamBridge streamBridge;
+
+    @GetMapping("/publish/{topic}/{name}")
+    public PageEvent publish(@PathVariable String name, @PathVariable String topic){
+        PageEvent pageEvent=new PageEvent(name,Math.random()>0.5?"U1":"U2",new Date(),new Random().nextInt(10000));
+        streamBridge.send(topic,pageEvent);
+        System.out.println("hello");
+        return pageEvent;
+    }
+}
+```
+ 
+**Resultat** :
+Une fois votre application lancée, vous pouvez tester la publication d’événements en accédant à l'URL suivante:
+[`http://localhost:8080/publish/<topic>/<name>`](http://localhost:8080/publish/%3Ctopic%3E/%3Cname%3E)
+
+- **`<topic>`** : Remplacez par le nom du topic Kafka.
+- **`<name>`** : Remplacez par le nom de l'événement à envoyer.
+
+![page](https://github.com/user-attachments/assets/1c5e927a-615e-46c2-aaa4-82dcd2c3ad3d)
+
+3. **Service pour Consumer , Producer , Function  :**
+On va creer un service ou on va rassembler tout les fonctions pour s'abonner , produire et maniipuler les messages . Vous pouvez consulter le code de service dans le fichier  [PageEventService.java](src/main/java/com/oussama/tpkafkastream/services/PageEventService.java)
+3.1 **Consumer :pageEventConsumer**
+La fonction pageEventConsumer s'abonne au topic Kafka configuré et affiche les messages reçus dans la console d'exécution. Le nom du topic est spécifié dans le fichier de configuration ```application.properties```.
+
+```java
+   @Data @NoArgsConstructor @AllArgsConstructor @ToString @Builder
+public class PageEvent {
+    private String name;
+    private String user;
+    private Date date;
+    private long duration;
+}
+```
+
+2.1 **PageEventRestController**
+
+Le service PageEventRestController est un contrôleur REST qui permet d'envoyer des messages à Kafka. Il utilise StreamBridge pour publier des messages vers un topic Kafka spécifié. La méthode associée répond aux requêtes de l'utilisateur en recevant en paramètre le nom du topic et un nom d'événement. Elle crée ensuite une instance de PageEvent et l'envoie vers le topic indiqué.
+
+```java
+@RestController
+public class PageEventRestController {
+    @Autowired
+    private StreamBridge streamBridge;
+
+    @GetMapping("/publish/{topic}/{name}")
+    public PageEvent publish(@PathVariable String name, @PathVariable String topic){
+        PageEvent pageEvent=new PageEvent(name,Math.random()>0.5?"U1":"U2",new Date(),new Random().nextInt(10000));
+        streamBridge.send(topic,pageEvent);
+        System.out.println("hello");
+        return pageEvent;
+    }
+}
+```
+ 
+**Resultat** :
+Une fois votre application lancée, vous pouvez tester la publication d’événements en accédant à l'URL suivante:
+[`http://localhost:8080/publish/<topic>/<name>`](http://localhost:8080/publish/%3Ctopic%3E/%3Cname%3E)
+
+- **`<topic>`** : Remplacez par le nom du topic Kafka.
+- **`<name>`** : Remplacez par le nom de l'événement à envoyer.
+
+![page](https://github.com/user-attachments/assets/1c5e927a-615e-46c2-aaa4-82dcd2c3ad3d)
+
