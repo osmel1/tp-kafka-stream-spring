@@ -187,20 +187,30 @@ Une fois votre application lancée, vous pouvez tester la publication d’évén
 ![page](https://github.com/user-attachments/assets/1c5e927a-615e-46c2-aaa4-82dcd2c3ad3d)
 
 3. **Service pour Consumer , Producer , Function et KafkaStream  :**
-On va creer un service ou on va rassembler tout les fonctions pour s'abonner , produire et maniipuler les messages . Vous pouvez consulter le code de service dans le fichier  [PageEventService.java](src/main/java/com/oussama/tpkafkastream/services/PageEventService.java). Il faut pour chaque function dans le service il faut la declarer dans le fichier de configuration :
+   
+On va creer un service ou on va rassembler tout les fonctions pour s'abonner , produire et maniipuler les messages . Vous pouvez consulter le code de service dans le fichier  [PageEventService.java](src/main/java/com/oussama/tpkafkastream/services/PageEventService.java). 
+
+Il faut pour chaque function dans le service il faut la declarer dans le fichier de configuration :
 ```spring.cloud.function.definition=pageEventConsumer;pageEventSupplier;pageEventFunction;kStreamFunction``` 
+
 3.1 **Consumer :pageEventConsumer**
+
 La fonction pageEventConsumer s'abonne au topic Kafka configuré et affiche les messages reçus dans la console d'exécution. Le nom du topic est spécifié dans le fichier de configuration ```application.properties``` par la proprite ```spring.cloud.stream.bindings.pageEventConsumer-in-0.destination```.
+
 **Resultat**: 
 
 
 3.2 **Supplier :pageEventSupplier**
+
 La fonction pageEventSupplier génère des événements PageEvent aléatoires et les envoie vers un topic Kafka configuré. Le nom du topic est spécifié dans le fichier de configuration ```application.properties``` à l'aide de la propriété ```spring.cloud.stream.bindings.pageEventSupplier-out-0.destination```.
+
 **Resultat**: 
 
 
-3.3 **Function :pageEventFunction**
+3.3 **Function:pageEventFunction**
+
 La fonction pageEventFunction reçoit un événement PageEvent en entrée, le transforme en mettant à jour la date et la durée, puis retourne un nouvel événement PageEvent. Le nom du topic d'entrée est configuré avec la propriété ```spring.cloud.stream.bindings.pageEventFunction-in-0.destination```, et le nom du topic de sortie est spécifié avec la propriété ```spring.cloud.stream.bindings.pageEventFunction-out-0.destination``` dans le fichier ```application.properties```.
+
 **Resultat**: 
 
 3.3 **Kafka Stream Function :kStreamFunction**
