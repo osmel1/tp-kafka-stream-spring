@@ -12,11 +12,10 @@
 
 - [Objectif](#objectif)
 - [Prérequis](#prérequis)
-- [Partie 1 : Configuration de Kafka en Local](#partie-1-configuration-de-kafka-en-local)
+- [Partie 1 : Configuration de Kafka en Local](#partie-1-configuration-de-kafka-en-local-windows)
 - [Partie 2 : Configuration de Kafka avec Docker](#partie-2-configuration-de-kafka-avec-docker)
-- [Partie 3 : Application avec Spring Cloud Streams](#partie-3-application-avec-spring-cloud-streams)
-- [Références](#références)
-- [Évaluation](#évaluation)
+- [Partie 3 : Application avec Spring Cloud Streams](#partie-3-développement-dune-application-avec-spring-cloud-streams)
+
 
 ## Objectif
 
@@ -139,8 +138,6 @@ Executer la commande suivant pour connecté au conteneur, où vous pourrez exéc
    ![consumer](https://github.com/user-attachments/assets/70d15ea6-56d0-46e6-95eb-2eefee481124)
 
 
-
-
 ## Partie 3 : Développement d'une application avec Spring Cloud Streams
 1. **Créer un projet Spring Boot**
 On cree un projet sping en utilisant IntelliJ IDE avec les dependances suivants :
@@ -189,47 +186,33 @@ Une fois votre application lancée, vous pouvez tester la publication d’évén
 
 ![page](https://github.com/user-attachments/assets/1c5e927a-615e-46c2-aaa4-82dcd2c3ad3d)
 
-3. **Service pour Consumer , Producer , Function  :**
-On va creer un service ou on va rassembler tout les fonctions pour s'abonner , produire et maniipuler les messages . Vous pouvez consulter le code de service dans le fichier  [PageEventService.java](src/main/java/com/oussama/tpkafkastream/services/PageEventService.java)
+3. **Service pour Consumer , Producer , Function et KafkaStream  :**
+On va creer un service ou on va rassembler tout les fonctions pour s'abonner , produire et maniipuler les messages . Vous pouvez consulter le code de service dans le fichier  [PageEventService.java](src/main/java/com/oussama/tpkafkastream/services/PageEventService.java). Il faut pour chaque function dans le service il faut la declarer dans le fichier de configuration :
+```spring.cloud.function.definition=pageEventConsumer;pageEventSupplier;pageEventFunction;kStreamFunction``` 
 3.1 **Consumer :pageEventConsumer**
-La fonction pageEventConsumer s'abonne au topic Kafka configuré et affiche les messages reçus dans la console d'exécution. Le nom du topic est spécifié dans le fichier de configuration ```application.properties```.
+La fonction pageEventConsumer s'abonne au topic Kafka configuré et affiche les messages reçus dans la console d'exécution. Le nom du topic est spécifié dans le fichier de configuration ```application.properties``` par la proprite ```spring.cloud.stream.bindings.pageEventConsumer-in-0.destination```.
+**Resultat**: 
 
-```java
-   @Data @NoArgsConstructor @AllArgsConstructor @ToString @Builder
-public class PageEvent {
-    private String name;
-    private String user;
-    private Date date;
-    private long duration;
-}
-```
 
-2.1 **PageEventRestController**
+3.2 **Supplier :pageEventSupplier**
+La fonction pageEventSupplier génère des événements PageEvent aléatoires et les envoie vers un topic Kafka configuré. Le nom du topic est spécifié dans le fichier de configuration ```application.properties``` à l'aide de la propriété ```spring.cloud.stream.bindings.pageEventSupplier-out-0.destination```.
+**Resultat**: 
 
-Le service PageEventRestController est un contrôleur REST qui permet d'envoyer des messages à Kafka. Il utilise StreamBridge pour publier des messages vers un topic Kafka spécifié. La méthode associée répond aux requêtes de l'utilisateur en recevant en paramètre le nom du topic et un nom d'événement. Elle crée ensuite une instance de PageEvent et l'envoie vers le topic indiqué.
 
-```java
-@RestController
-public class PageEventRestController {
-    @Autowired
-    private StreamBridge streamBridge;
+3.3 **Function :pageEventFunction**
+La fonction pageEventFunction reçoit un événement PageEvent en entrée, le transforme en mettant à jour la date et la durée, puis retourne un nouvel événement PageEvent. Le nom du topic d'entrée est configuré avec la propriété ```spring.cloud.stream.bindings.pageEventFunction-in-0.destination```, et le nom du topic de sortie est spécifié avec la propriété ```spring.cloud.stream.bindings.pageEventFunction-out-0.destination``` dans le fichier ```application.properties```.
+**Resultat**: 
 
-    @GetMapping("/publish/{topic}/{name}")
-    public PageEvent publish(@PathVariable String name, @PathVariable String topic){
-        PageEvent pageEvent=new PageEvent(name,Math.random()>0.5?"U1":"U2",new Date(),new Random().nextInt(10000));
-        streamBridge.send(topic,pageEvent);
-        System.out.println("hello");
-        return pageEvent;
-    }
-}
-```
- 
-**Resultat** :
-Une fois votre application lancée, vous pouvez tester la publication d’événements en accédant à l'URL suivante:
-[`http://localhost:8080/publish/<topic>/<name>`](http://localhost:8080/publish/%3Ctopic%3E/%3Cname%3E)
+3.3 **Kafka Stream Function :kStreamFunction**
 
-- **`<topic>`** : Remplacez par le nom du topic Kafka.
-- **`<name>`** : Remplacez par le nom de l'événement à envoyer.
+La fonction kStreamFunction traite un flux de données Kafka (KStream<String, PageEvent>) en filtrant les événements dont la durée est supérieure à 100. Elle transforme ensuite ces événements pour compter le nombre d'occurrences de chaque nom sur une fenêtre de temps de 5 secondes. Les résultats sont renvoyés sous forme de flux (KStream<String, Long>).
 
-![page](https://github.com/user-attachments/assets/1c5e927a-615e-46c2-aaa4-82dcd2c3ad3d)
+- ```spring.cloud.stream.bindings.kStreamFunction-in-0.destination``` : Spécifie le nom du topic Kafka d'entrée . Le flux Kafka KStream lira les événements de ce topic.
+- ```spring.cloud.stream.bindings.kStreamFunction-out-0.destination``` : Indique le nom du topic Kafka de sortie . Le flux Kafka transformé sera envoyé vers ce topic.
+- ```spring.cloud.stream.kafka.streams.binder.configuration.commit.interval.ms``` : Définit l'intervalle de commit des données . Ici, configuré à 1000 ms (1 seconde), ce qui signifie que Kafka persistera les résultats de comptage toutes les secondes.
+  
+**Resultat**: 
+
+
+
 
