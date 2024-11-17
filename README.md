@@ -198,6 +198,7 @@ Il faut pour chaque function dans le service il faut la declarer dans le fichier
 La fonction pageEventConsumer s'abonne au topic Kafka configuré et affiche les messages reçus dans la console d'exécution. Le nom du topic est spécifié dans le fichier de configuration ```application.properties``` par la proprite ```spring.cloud.stream.bindings.pageEventConsumer-in-0.destination```.
 
 **Resultat**: 
+![image](https://github.com/user-attachments/assets/4ba5193e-41d9-450d-918b-8a5f4e37abdb)
 
 
 3.2 **Supplier :pageEventSupplier**
@@ -206,12 +207,16 @@ La fonction pageEventSupplier génère des événements PageEvent aléatoires et
 
 **Resultat**: 
 
+![image](https://github.com/user-attachments/assets/cd75dc73-727c-4aa3-bb90-666b132e3b72)
 
 3.3 **Function:pageEventFunction**
 
 La fonction pageEventFunction reçoit un événement PageEvent en entrée, le transforme en mettant à jour la date et la durée, puis retourne un nouvel événement PageEvent. Le nom du topic d'entrée est configuré avec la propriété ```spring.cloud.stream.bindings.pageEventFunction-in-0.destination```, et le nom du topic de sortie est spécifié avec la propriété ```spring.cloud.stream.bindings.pageEventFunction-out-0.destination``` dans le fichier ```application.properties```.
 
 **Resultat**: 
+
+![image](https://github.com/user-attachments/assets/2e442faa-1f0b-4416-b065-124d0e6e56de)
+
 
 3.3 **Kafka Stream Function :kStreamFunction**
 
@@ -221,8 +226,23 @@ La fonction kStreamFunction traite un flux de données Kafka (KStream<String, Pa
 - ```spring.cloud.stream.bindings.kStreamFunction-out-0.destination``` : Indique le nom du topic Kafka de sortie . Le flux Kafka transformé sera envoyé vers ce topic.
 - ```spring.cloud.stream.kafka.streams.binder.configuration.commit.interval.ms``` : Définit l'intervalle de commit des données . Ici, configuré à 1000 ms (1 seconde), ce qui signifie que Kafka persistera les résultats de comptage toutes les secondes.
   
-**Resultat**: 
 
 
+4. **Afficher les données en temps réel :**
+4.1  **API REST pour publier des événements :**
+   -  Utilise InteractiveQueryService pour interroger un store Kafka nommé page-count (qu'on creer lors de kStreamFunction).
+   -  Creer une méthode expose un flux d'événements serveur (EventStream) qui envoie des mises à jour des données d'analyse toutes les secondes. Les données récupérées sont agrégées et envoyées en tant que flux Flux<Map<String, Long>>
+
+**Resultat**
+
+![image](https://github.com/user-attachments/assets/69eaef72-3425-49fb-b11c-62de45239e63)
+
+4.2  **Page HTML (index.html) avec SmoothieJS :**
+   - SmoothieJS est une bibliothèque JavaScript utilisée pour créer des graphiques dynamiques et fluides, mis à jour en temps réel. La fonctionnalité EventSource permet de se connecter à un flux de données en temps réel envoyé par le serveur (endpoint ```/analytics```) et d'écouter les mises à jour continues.
+   - Chaque série de données (représentée par TimeSeries) affiche les valeurs de pages spécifiques comme P1 et P2 sur le graphique. La fonction RandomColor attribue une couleur unique à chaque série pour faciliter la distinction visuelle. Les nouvelles données reçues sont ajoutées au graphique avec la méthode append, assurant une mise à jour instantanée du visuel.
+
+**Resultat**
+
+![téléchargement](https://github.com/user-attachments/assets/2322ee65-979a-46e6-ae0e-e88cb9d16353)
 
 
